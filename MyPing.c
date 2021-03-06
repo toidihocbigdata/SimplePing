@@ -85,8 +85,8 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    // Send ICMP echo messages
-    
+
+    // Init some buffer and variable for send mesasge and revice
     int dataLength = DEFAULT_DATA_LENGTH;
     int messageLength = dataLength + sizeof(struct icmphdr);
     int sequenceNumber = 1;
