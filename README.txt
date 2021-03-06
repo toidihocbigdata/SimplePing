@@ -1,6 +1,12 @@
 Functionality:
 A programs do a ping protol to an IPv4 address (1 time) and print round trip time.
 
+What I did:
+- create ICMP ECHO message follow RFC 792
+- rewrite checksum function
+- calculate roundtrip time
+- send and receive ICMP message by socket
+
 Build:
 $ gcc -o MyPing MyPing.c
 
@@ -70,13 +76,13 @@ ICMP header : (refer RFC 792)
 
         My PC                                           A Server
 
-            ---------- ICMP_ECHOREPLY (SEQ = 1)--------->
+            ---------- ICMP_ECHO (SEQ = 1) -------------->
 
-            <---------- ICMP_ECHOREPLY (SEQ = 1) --------
+            <---------- ICMP_ECHOREPLY (SEQ = 1) ---------
 
-            ---------- ICMP_ECHOREPLY (SEQ = 2)--------->
+            ---------- ICMP_ECHO (SEQ = 2) -------------->
 
-            <---------- ICMP_ECHOREPLY (SEQ = 2) --------
+            <---------- ICMP_ECHOREPLY (SEQ = 2) ---------
 
                                 ...
 
