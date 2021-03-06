@@ -18,6 +18,12 @@ Sent ICMP_ECHO Message
 Reiveied ICMP_ECHOREPLY sequence number = 1
 Round trip time = 25.895000 ms 
 
+Test:
+Using wireshark capture with filter: ip.proto == 1
+Wireshark support check status checksum and time response
+We aslo read data in ICMP_ECHO and ICMP_ECHOREPLY in wireshark.
+See test.png for more information
+
 Ping Protocol:
 
 My PC                                           A Server
