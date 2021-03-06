@@ -35,7 +35,7 @@ unsigned short calculateCheckSum(void* headerAddress, int length)
         tempValue += (*tempPointer) << 8;
         checkSum = addOneComplement16Bit(checkSum, tempValue);
     }
-    return checkSum;
+    return ~checkSum;
 }
 
 struct icmphdr* createICMPMessage(int sequenceNumber, int dataLength)
