@@ -10,15 +10,45 @@ What I did:
 Build:
 $ gcc -o MyPing MyPing.c
 
-Run ping to Google DNS:
-$ ./MyPing 8.8.8.8  
+Run ping to any server:
+
+Eg1: ping to Google Server 5 times
+$ ./MyPing 8.8.8.8 3
 
 Results:
 Sent ICMP_ECHO Message
 Reiveied ICMP_ECHOREPLY sequence number = 1
-Round trip time = 25.895000 ms 
+Round trip time = 23.974000 ms 
 
-Test:
+Sent ICMP_ECHO Message
+Reiveied ICMP_ECHOREPLY sequence number = 2
+Round trip time = 34.736000 ms 
+
+Sent ICMP_ECHO Message
+Reiveied ICMP_ECHOREPLY sequence number = 3
+Round trip time = 23.771000 ms 
+
+Eg2 : ping to 111.65.250.2 (ip of vnexpress.net) repeatly until recieving terminate signal
+
+Sent ICMP_ECHO Message
+Reiveied ICMP_ECHOREPLY sequence number = 1
+Round trip time = 3.311000 ms 
+
+Sent ICMP_ECHO Message
+Reiveied ICMP_ECHOREPLY sequence number = 2
+Round trip time = 9.690000 ms 
+
+Sent ICMP_ECHO Message
+Reiveied ICMP_ECHOREPLY sequence number = 3
+Round trip time = 3.438000 ms 
+
+Sent ICMP_ECHO Message
+Reiveied ICMP_ECHOREPLY sequence number = 4
+Round trip time = 3.070000 ms 
+
+...
+
+Test Tool:
 Using wireshark capture with filter: ip.proto == 1
 Wireshark support check status checksum and time response
 We aslo read data in ICMP_ECHO and ICMP_ECHOREPLY in wireshark.

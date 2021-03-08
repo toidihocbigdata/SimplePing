@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <sys/time.h>
+#include <unistd.h>
 
 #define BILLION 1000000000L
 #define DEFAULT_PORT 100
@@ -57,6 +58,7 @@ struct icmphdr* createICMPMessage(int sequenceNumber, int dataLength)
 int main(int argc, char **argv)
 {
     // Init socket
+    long numberOfPing;
     struct timeval begin, end;
     double timeSpent;
     int pingSocket, addressLength;
@@ -68,11 +70,21 @@ int main(int argc, char **argv)
     destinationAddress.sin_family = AF_INET;
     destinationAddress.sin_port = htons(DEFAULT_PORT);
     // take arg[1] as Ipv4 address
-    if (0 ==inet_aton(argv[1], &destinationAddress.sin_addr))
+    if (0 == inet_aton(argv[1], &destinationAddress.sin_addr))
     {
         printf("Wrong IPv4 address, please put IPv4 as argument 1\n");
         exit(1);
     }
+
+    if ( 3 == argc)
+    {
+        numberOfPing = atoi(argv[2]);
+    }
+    else
+    {
+        numberOfPing = -1; 
+    }
+    
     pingSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_ICMP);
     if (-1 == pingSocket)
     {
@@ -84,7 +96,6 @@ int main(int argc, char **argv)
         printf("Cannot getsockname\n");
         exit(1);
     }
-
 
     // Init some buffer and variable for send mesasge and revice
     int dataLength = DEFAULT_DATA_LENGTH;
@@ -108,39 +119,60 @@ int main(int argc, char **argv)
     meassageHeader.msg_iov = &iov;
     meassageHeader.msg_iovlen = 1;
     icmpRepliedMessage = meassageHeader.msg_iov->iov_base;
-    polling = MSG_WAITALL;
 
-    int i;
-    gettimeofday(&begin, NULL);
-    // Send ECHO Message
-    i = sendto(pingSocket, imcpMessage, (messageLength), 0, (struct sockaddr*)&destinationAddress, sizeof(destinationAddress));
-    printf("Sent ICMP_ECHO Message\n");
-    // Wait to receive message
-    i = recvmsg(pingSocket, &meassageHeader, polling);
-    gettimeofday(&end, NULL);
+    int i, pingIdx = 0;
+    for (;;)
+    {
+        imcpMessage->un.echo.sequence = htons(sequenceNumber++);
+        gettimeofday(&begin, NULL);
+        // Send ECHO Message
+        i = sendto(pingSocket, imcpMessage, (messageLength), 0, (struct sockaddr*)&destinationAddress, sizeof(destinationAddress));
+        printf("Sent ICMP_ECHO Message\n");
+        
+        // Wait to receive message
+        polling = MSG_WAITALL;
+        i = recvmsg(pingSocket, &meassageHeader, polling);
+        gettimeofday(&end, NULL);
 
-    // Check results
-    if ( 0 > i)
-    {
-        printf("Error in recvfrom\n");
-        exit(1);
-    };
-    if (! 0 == calculateCheckSum(icmpRepliedMessage, dataLength))
-    {
-        printf("Checksum status : BAD\n");
-        exit(1);
-    }
+        // Check results
+        if ( 0 > i)
+        {
+            printf("Error in recvfrom\n\n");
+            continue;
+        };
+        if (! 0 == calculateCheckSum(icmpRepliedMessage, dataLength))
+        {
+            printf("Checksum status : BAD\n\n");
+            continue;
+        }
 
-    if (icmpRepliedMessage->type == ICMP_ECHOREPLY) 
-    {
-        timeSpent =   (double)(end.tv_usec - begin.tv_usec) / 1000 
-                    + (double)(end.tv_sec - begin.tv_sec) * 1000;  // uint in ms
-        printf("Reiveied ICMP_ECHOREPLY sequence number = %d\n", ntohs(icmpRepliedMessage->un.echo.sequence));
-        printf("Round trip time = %lf ms \n", timeSpent);
-    } 
-    else 
-    {
-        printf("Not received message ICMP_ECHOREPLY\n");
+        if (icmpRepliedMessage->type == ICMP_ECHOREPLY) 
+        {
+            timeSpent =   (double)(end.tv_usec - begin.tv_usec) / 1000 
+                        + (double)(end.tv_sec - begin.tv_sec) * 1000;  // uint in ms
+            printf("Reiveied ICMP_ECHOREPLY sequence number = %d\n", ntohs(icmpRepliedMessage->un.echo.sequence));
+            printf("Round trip time = %lf ms \n\n", timeSpent);
+        } 
+        else 
+        {
+            printf("Not received message ICMP_ECHOREPLY\n\n");
+            continue;
+        }
+
+        pingIdx++;
+        sleep(1);
+        
+        if ( -1 == numberOfPing)
+        {
+            continue;
+        }
+        else
+        {
+            if (pingIdx == numberOfPing)
+            {
+                break;
+            }
+        }
     }
     
     // Release dynamic memory
