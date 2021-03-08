@@ -105,7 +105,6 @@ int main(int argc, char **argv)
     char* dataAddress = (char*) calloc(messageLength, sizeof(char));
     struct icmphdr* imcpMessage = (struct icmphdr*) dataAddress; 
     struct msghdr messageHeader;
-    int polling;
     char addressBuffer[128];
     struct iovec iov;
     unsigned char* repliedMessage = (unsigned char*)malloc(messageLength + IPV4_HEADER_LEN);
@@ -132,8 +131,7 @@ int main(int argc, char **argv)
         printf("Sent ICMP_ECHO Message\n");
         
         // Wait to receive message
-        polling = MSG_WAITALL;
-        i = recvmsg(pingSocket, &messageHeader, polling);
+        i = recvmsg(pingSocket, &messageHeader, 0);
         gettimeofday(&end, NULL);
 
         // Check results
