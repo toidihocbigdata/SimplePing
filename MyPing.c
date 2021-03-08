@@ -100,7 +100,7 @@ int main(int argc, char **argv)
     // Init some buffer and variable for send mesasge and revice
     int dataLength = DEFAULT_DATA_LENGTH;
     int messageLength = dataLength + sizeof(struct icmphdr);
-    int sequenceNumber = 1;
+    unsigned int sequenceNumber = 1;
     struct icmphdr* imcpMessage = createICMPMessage(sequenceNumber, dataLength);
 
     struct msghdr meassageHeader;
@@ -120,7 +120,8 @@ int main(int argc, char **argv)
     meassageHeader.msg_iovlen = 1;
     icmpRepliedMessage = meassageHeader.msg_iov->iov_base;
 
-    int i, pingIdx = 0;
+    int i;
+    long pingIdx = 0;
     for (;;)
     {
         imcpMessage->un.echo.sequence = htons(sequenceNumber++);

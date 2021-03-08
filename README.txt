@@ -12,7 +12,7 @@ $ gcc -o MyPing MyPing.c
 
 Run ping to any server:
 
-Eg1: ping to Google Server 5 times
+Eg1: ping to Google Server 3 times
 $ ./MyPing 8.8.8.8 3
 
 Sent ICMP_ECHO Message
