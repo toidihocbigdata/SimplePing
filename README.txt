@@ -1,5 +1,5 @@
 Functionality:
-A programs do a ping protol to an IPv4 address (1 time) and print round trip time.
+A programs do a ping protol to an IPv4 address and print round trip time.
 
 What I did:
 - create ICMP ECHO message follow RFC 792
@@ -15,7 +15,6 @@ Run ping to any server:
 Eg1: ping to Google Server 5 times
 $ ./MyPing 8.8.8.8 3
 
-Results:
 Sent ICMP_ECHO Message
 Reiveied ICMP_ECHOREPLY sequence number = 1
 Round trip time = 23.974000 ms 
@@ -28,7 +27,8 @@ Sent ICMP_ECHO Message
 Reiveied ICMP_ECHOREPLY sequence number = 3
 Round trip time = 23.771000 ms 
 
-Eg2 : ping to 111.65.250.2 (ip of vnexpress.net) repeatly until recieving terminate signal
+Eg2 : ping to 111.65.250.2 (ip of vnexpress.net) repeatly until recieving terminate signal if there no 2rd arg
+$ ./MyPing 111.65.250.2
 
 Sent ICMP_ECHO Message
 Reiveied ICMP_ECHOREPLY sequence number = 1
