@@ -11,6 +11,7 @@
 #define BILLION 1000000000L
 #define DEFAULT_PORT 100
 #define DEFAULT_DATA_LENGTH 56
+#define IPV4_HEADER_LEN 20
 
 unsigned short addOneComplement16Bit(unsigned short x, unsigned short y){
     unsigned int sum;
@@ -39,11 +40,11 @@ unsigned short calculateCheckSum(void* headerAddress, int length)
     return ~checkSum;
 }
 
-struct icmphdr* createICMPMessage(int sequenceNumber, int dataLength)
+struct icmphdr* createICMPMessage(int sequenceNumber, char* dataAddress, int dataLength)
 {
-    int messageLength = dataLength + sizeof(struct icmphdr); // in byte
-    struct icmphdr* icmpMessage = (struct icmphdr*) calloc(messageLength,1);
-    memset(icmpMessage, 0xff, messageLength);
+    int messageLength = dataLength + sizeof(struct icmphdr); // in bytes
+    struct icmphdr* icmpMessage = (struct icmphdr*) dataAddress;
+    memset(icmpMessage, 0x00, messageLength);
     // We are sending a ICMP_ECHO ICMP packet
     icmpMessage->type = ICMP_ECHO;
     icmpMessage->code = 0;
@@ -85,7 +86,7 @@ int main(int argc, char **argv)
         numberOfPing = -1; 
     }
     
-    pingSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_ICMP);
+    pingSocket = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
     if (-1 == pingSocket)
     {
         printf("Cannot create socket\n");
@@ -100,31 +101,31 @@ int main(int argc, char **argv)
     // Init some buffer and variable for send mesasge and revice
     int dataLength = DEFAULT_DATA_LENGTH;
     int messageLength = dataLength + sizeof(struct icmphdr);
-    unsigned int sequenceNumber = 1;
-    struct icmphdr* imcpMessage = createICMPMessage(sequenceNumber, dataLength);
-
-    struct msghdr meassageHeader;
+    unsigned int sequenceNumber = 0;
+    char* dataAddress = (char*) calloc(messageLength, sizeof(char));
+    struct icmphdr* imcpMessage = (struct icmphdr*) dataAddress; 
+    struct msghdr messageHeader;
     int polling;
     char addressBuffer[128];
     struct iovec iov;
-    unsigned char* repliedMessage = (unsigned char*)malloc(messageLength);
-    struct icmphdr *icmpRepliedMessage;
+    unsigned char* repliedMessage = (unsigned char*)malloc(messageLength + IPV4_HEADER_LEN);
+    struct icmphdr *icmpRepliedMessage = (struct icmphdr *)(repliedMessage + IPV4_HEADER_LEN);
 
     iov.iov_base = (char *) repliedMessage;
     iov.iov_len = messageLength;
 
-    memset(&meassageHeader, 0, sizeof(meassageHeader));
-    meassageHeader.msg_name = addressBuffer;
-    meassageHeader.msg_namelen = sizeof(addressBuffer);
-    meassageHeader.msg_iov = &iov;
-    meassageHeader.msg_iovlen = 1;
-    icmpRepliedMessage = meassageHeader.msg_iov->iov_base;
+    memset(&messageHeader, 0, sizeof(messageHeader));
+    messageHeader.msg_name = addressBuffer;
+    messageHeader.msg_namelen = sizeof(addressBuffer);
+    messageHeader.msg_iov = &iov;
+    messageHeader.msg_iovlen = 1;
 
     int i;
     long pingIdx = 0;
     for (;;)
     {
-        imcpMessage->un.echo.sequence = htons(sequenceNumber++);
+        pingIdx++;
+        createICMPMessage(pingIdx, dataAddress, dataLength);
         gettimeofday(&begin, NULL);
         // Send ECHO Message
         i = sendto(pingSocket, imcpMessage, (messageLength), 0, (struct sockaddr*)&destinationAddress, sizeof(destinationAddress));
@@ -132,21 +133,20 @@ int main(int argc, char **argv)
         
         // Wait to receive message
         polling = MSG_WAITALL;
-        i = recvmsg(pingSocket, &meassageHeader, polling);
+        i = recvmsg(pingSocket, &messageHeader, polling);
         gettimeofday(&end, NULL);
 
         // Check results
         if ( 0 > i)
         {
             printf("Error in recvfrom\n\n");
-            continue;
+            goto labelEnd;
         };
         if (! 0 == calculateCheckSum(icmpRepliedMessage, dataLength))
         {
             printf("Checksum status : BAD\n\n");
-            continue;
+            goto labelEnd;
         }
-
         if (icmpRepliedMessage->type == ICMP_ECHOREPLY) 
         {
             timeSpent =   (double)(end.tv_usec - begin.tv_usec) / 1000 
@@ -157,11 +157,9 @@ int main(int argc, char **argv)
         else 
         {
             printf("Not received message ICMP_ECHOREPLY\n\n");
-            continue;
         }
 
-        pingIdx++;
-        sleep(1);
+labelEnd: sleep(1);
         
         if ( -1 == numberOfPing)
         {

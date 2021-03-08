@@ -7,13 +7,18 @@ What I did:
 - calculate roundtrip time
 - send and receive ICMP message by socket
 
+Fixed Bug - cannot creat socket in Ubuntu18:
+
+- socket(AF_INET, SOCK_DGRAM, IPPROTO_ICMP) cannot call on UserSpace on Ubuntu18 but can call on Ubuntu20
+- change to socket(AF_INET, SOCK_RAW, IPPROTO_ICMP) and extract ICMP header from recvmsg() handily
+
 Build:
 $ gcc -o MyPing MyPing.c
-
+ 
 Run ping to any server:
 
 Eg1: ping to Google Server 3 times
-$ ./MyPing 8.8.8.8 3
+$ sudo ./MyPing 8.8.8.8 3
 
 Sent ICMP_ECHO Message
 Reiveied ICMP_ECHOREPLY sequence number = 1
@@ -28,7 +33,7 @@ Reiveied ICMP_ECHOREPLY sequence number = 3
 Round trip time = 23.771000 ms 
 
 Eg2 : ping to 111.65.250.2 (ip of vnexpress.net) repeatly until recieving terminate signal if there no 2rd arg
-$ ./MyPing 111.65.250.2
+$ sudo ./MyPing 111.65.250.2
 
 Sent ICMP_ECHO Message
 Reiveied ICMP_ECHOREPLY sequence number = 1
