@@ -60,7 +60,7 @@ int main(int argc, char **argv)
 {
     // Init socket
     long numberOfPing;
-    struct timeval begin, end;
+    struct timeval begin, end, waitTime;
     double timeSpent;
     int pingSocket, addressLength;
     struct sockaddr_in sourceAddress;
@@ -92,10 +92,17 @@ int main(int argc, char **argv)
         printf("Cannot create socket\n");
         exit(1);
     }
-    if ( -1 == getsockname(pingSocket, (struct sockaddr*)&sourceAddress, &addressLength))
+    if (-1 == getsockname(pingSocket, (struct sockaddr*)&sourceAddress, &addressLength))
     {
         printf("Cannot getsockname\n");
         exit(1);
+    }
+    waitTime.tv_sec = 1;
+    waitTime.tv_usec = 0;
+    if (-1 == setsockopt(pingSocket, SOL_SOCKET, SO_RCVTIMEO, (char*) &waitTime, sizeof(struct timeval)))
+    {
+        printf("Error at set socket option");
+	    exit(1);
     }
 
     // Init some buffer and variable for send mesasge and revice
@@ -135,7 +142,7 @@ int main(int argc, char **argv)
         gettimeofday(&end, NULL);
 
         // Check results
-        if ( 0 > i)
+        if (0 > i)
         {
             printf("Error in recvfrom\n\n");
             goto labelEnd;
@@ -154,6 +161,7 @@ int main(int argc, char **argv)
         } 
         else 
         {
+            printf("%ld\n", pingIdx);
             printf("Not received message ICMP_ECHOREPLY\n\n");
         }
 
