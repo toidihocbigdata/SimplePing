@@ -1,5 +1,5 @@
 # Descriptons for MyPing program
-A program executes Ping process to a IPv4 (not support Domain Name look up from DNS)
+A program executes Ping process to a IPv4 address (or Domain Name)
 
 ## Build command
 ```bash
