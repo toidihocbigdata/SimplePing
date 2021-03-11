@@ -10,6 +10,10 @@ gcc -o MyPing MyPing.c
 - Ping loop: 
 ``` bash
 $ sudo ./MyPing 127.0.0.1
+
+Resolving DNS..
+127.0.0.1
+
 Reiveied ICMP_ECHOREPLY sequence number = 1
 Round trip time = 0.059000 ms 
 
@@ -23,6 +27,10 @@ Round trip time = 0.063000 ms
 - Ping N times (N = 4), pass 4 as arg 3rd of program:
 ```bash
 $ sudo ./MyPing 8.8.8.8 4
+
+Resolving DNS..
+8.8.8.8
+
 Reiveied ICMP_ECHOREPLY sequence number = 1
 Round trip time = 25.481000 ms 
 
@@ -34,6 +42,26 @@ Round trip time = 26.410000 ms
 
 Reiveied ICMP_ECHOREPLY sequence number = 4
 Round trip time = 27.362000 ms 
+```
+
+- Ping by domain name:
+```bash
+sudo ./MyPing dantri.com.vn
+
+Resolving DNS..
+42.113.206.26
+
+Reiveied ICMP_ECHOREPLY sequence number = 1
+Round trip time = 6.326000 ms 
+
+Reiveied ICMP_ECHOREPLY sequence number = 2
+Round trip time = 3.946000 ms 
+
+Reiveied ICMP_ECHOREPLY sequence number = 3
+Round trip time = 4.468000 ms 
+
+Reiveied ICMP_ECHOREPLY sequence number = 4
+Round trip time = 3.118000 ms 
 ```
 
 ## Ping Protocol

@@ -8,11 +8,31 @@
 #include <arpa/inet.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <netdb.h> 
 
 #define DEFAULT_PORT 100
 #define DEFAULT_DATA_LENGTH 56
 #define IPV4_HEADER_LEN 20
 #define RECV_TIMEOUT 1 
+
+char *resolveDNS(char *hostAddr, struct sockaddr_in *desAddr) 
+{ 
+    printf("\nResolving DNS..\n"); 
+    struct hostent *hostEntity; 
+    char *ip = (char*)malloc(NI_MAXHOST*sizeof(char)); 
+  
+    if ((hostEntity = gethostbyname(hostAddr)) == NULL) 
+    { 
+        return NULL; 
+    } 
+      
+    strcpy(ip, inet_ntoa(*(struct in_addr *) hostEntity->h_addr)); 
+    desAddr->sin_family = hostEntity->h_addrtype; 
+    desAddr->sin_port = htons(DEFAULT_PORT); 
+    desAddr->sin_addr.s_addr  = *(long*)hostEntity->h_addr; 
+  
+    return ip; 
+} 
 
 unsigned short addOneComplement16Bit(unsigned short x, unsigned short y)
 {
@@ -69,16 +89,22 @@ int main(int argc, char **argv)
     struct in_addr initDesAddr;
     memset(&sourceAddress, 0, sizeof(struct sockaddr_in));
     memset(&destinationAddress, 0, sizeof(struct sockaddr_in));
-    sourceAddress.sin_family = AF_INET;
-    destinationAddress.sin_family = AF_INET;
-    destinationAddress.sin_port = htons(DEFAULT_PORT);
-    addressLength = sizeof(destinationAddress);
+
+    char * ipAddr;
     // take arg[1] as Ipv4 address
-    if (0 == inet_aton(argv[1], &destinationAddress.sin_addr))
-    {
-        printf("Wrong IPv4 address, please put IPv4 as argument 1\n");
-        exit(1);
+    ipAddr = resolveDNS(argv[1], &destinationAddress); 
+
+    if(ipAddr==NULL) 
+    { 
+        printf("Cannot resolve this domain name!\n"); 
+        return 0; 
     }
+    else
+    {
+        printf("%s\n\n", ipAddr);
+    }
+    addressLength = sizeof(destinationAddress);
+    sourceAddress.sin_family = destinationAddress.sin_family;
 
     initDesAddr.s_addr = destinationAddress.sin_addr.s_addr;
 
