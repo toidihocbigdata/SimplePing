@@ -66,6 +66,7 @@ int main(int argc, char **argv)
     int pingSocket, addressLength;
     struct sockaddr_in sourceAddress;
     struct sockaddr_in destinationAddress;
+    struct in_addr initDesAddr;
     memset(&sourceAddress, 0, sizeof(struct sockaddr_in));
     memset(&destinationAddress, 0, sizeof(struct sockaddr_in));
     sourceAddress.sin_family = AF_INET;
@@ -78,6 +79,8 @@ int main(int argc, char **argv)
         printf("Wrong IPv4 address, please put IPv4 as argument 1\n");
         exit(1);
     }
+
+    initDesAddr.s_addr = destinationAddress.sin_addr.s_addr;
 
     if ( 3 == argc)
     {
@@ -105,8 +108,8 @@ int main(int argc, char **argv)
     waitTime.tv_usec = 0;
     if (-1 == setsockopt(pingSocket, SOL_SOCKET, SO_RCVTIMEO, (char*) &waitTime, sizeof(struct timeval)))
     {
-        printf("Error at set socket option");
-	    exit(1);
+        printf("Error at set socket option\n");
+        exit(1);
     }
 
     // Init some buffer and variable for send mesasge and revice
@@ -131,6 +134,7 @@ int main(int argc, char **argv)
         createICMPMessage(pingIdx, sentBuffer, icmpMessLength);
         gettimeofday(&begin, NULL);
         // Send ECHO Message
+        destinationAddress.sin_addr.s_addr = initDesAddr.s_addr;
         i = sendto(pingSocket, sentBuffer, icmpMessLength, 0, (struct sockaddr*)&destinationAddress, sizeof(destinationAddress));
         if ( 0 > i)
         {
@@ -138,7 +142,6 @@ int main(int argc, char **argv)
             continue;
         }
         // Receive ECHO REPLY message
-        inet_aton(argv[1], &destinationAddress.sin_addr);
         i = recvfrom(pingSocket, recvBuffer, icmpMessLength + IPV4_HEADER_LEN, 0, (struct sockaddr*)&destinationAddress, &addressLength);
         gettimeofday(&end, NULL);;
         if (0 > i)
@@ -153,8 +156,8 @@ int main(int argc, char **argv)
             continue;
         }
 
-        if ((icmpReplyHeader->type == ICMP_ECHOREPLY) && 
-            (((unsigned int)ipHeader->saddr == (unsigned int)destinationAddress.sin_addr.s_addr)))
+        if ((icmpReplyHeader->type == ICMP_ECHOREPLY) 
+            && (ipHeader->saddr == initDesAddr.s_addr))
         {
             timeSpent =   (double)(end.tv_usec - begin.tv_usec) / 1000 
                         + (double)(end.tv_sec - begin.tv_sec) * 1000;  // uint in ms
@@ -165,7 +168,7 @@ int main(int argc, char **argv)
         {   
             if (icmpReplyHeader->type ==ICMP_DEST_UNREACH)
             {
-                printf("Destination Unreachable\n");
+                printf("Destination Unreachable\n\n");
             }
 
         }        
